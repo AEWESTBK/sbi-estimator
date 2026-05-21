@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SBI Design & Build Estimator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:15px;color:#1a1a1a;background:#f5f3ef}
+.app{max-width:960px;margin:0 auto;padding:0 0 80px}
+
+/* ── Header bar ── */
+.app-header{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#1a1a1a;border-radius:0 0 16px 16px;margin-bottom:22px}
+.app-header-text h1{font-size:17px;font-weight:600;color:#fff;margin-bottom:1px}
+.app-header-text p{font-size:11px;color:#888}
+.header-logo-wrap{cursor:pointer;flex-shrink:0;display:flex;align-items:center}
+.header-logo-wrap img{height:46px;width:auto}
+.header-placeholder{height:46px;width:46px;border:1.5px dashed #444;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#666;text-align:center;line-height:1.3;padding:4px}
+
+/* ── Tabs ── */
+.tabs{display:flex;border-bottom:1px solid #e0ddd8;margin-bottom:18px;overflow-x:auto;padding:0 20px}
+.tab{padding:10px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:#999;border-bottom:2.5px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0;font-family:inherit;font-weight:500}
+.tab.active{color:#1a1a1a;border-bottom-color:#b5a89a}
+
+/* ── Content padding ── */
+#tab-builder,#tab-rates,#tab-preview{padding:0 20px}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:12px;border:.5px solid #e0ddd8;padding:16px 18px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:600;color:#b5a89a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+
+/* ── Grids ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.full{grid-column:1/-1}
+@media(max-width:600px){.g2,.g4{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.g3{grid-template-columns:1fr}}
+
+/* ── Fields ── */
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.05em}
+.fld input,.fld select,.fld textarea{border:.5px solid #ddd;border-radius:8px;padding:9px 11px;font-size:14px;font-family:inherit;color:#1a1a1a;background:#fafaf8;outline:none;width:100%;transition:border-color .15s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#b5a89a;background:#fff}
+.fld input[readonly]{background:#f5f3ef;color:#888;border-color:#eee}
+.fld textarea{resize:vertical;min-height:64px}
+
+/* ── Service blocks ── */
+.svc-block{border-radius:10px;padding:14px 16px;margin-bottom:10px;border:.5px solid #e0ddd8}
+.svc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.svc-badge{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.svc-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.del-btn{background:none;border:none;cursor:pointer;color:#ccc;font-size:20px;line-height:1;padding:0 4px;font-family:inherit;border-radius:6px}
+.del-btn:hover{color:#e44;background:#fff0f0}
+.divider{border-top:.5px dashed #e0ddd8;margin:12px 0}
+.breakdown-box{background:#f4faf6;border:.5px solid #c8e6d4;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px}
+.brow{display:flex;justify-content:space-between;padding:2px 0;color:#2a6a45;gap:8px}
+.brow.total-row{font-weight:600;border-top:.5px solid #c8e6d4;margin-top:4px;padding-top:6px;font-size:13px}
+.blabel{color:#4a9a6a;flex:1}
+
+/* ── Add service buttons ── */
+.add-svc-wrap{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.add-svc{flex:1;min-width:120px;border-radius:9px;padding:10px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;border:.5px solid transparent;transition:opacity .15s}
+.add-svc:hover{opacity:.82}
+
+/* ── Totals ── */
+.totals-wrap{display:flex;justify-content:flex-end;margin-top:18px}
+.totals-box{width:100%;max-width:310px;background:#f5f3ef;border-radius:10px;padding:14px 16px;border:.5px solid #e0ddd8}
+.trow{display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:.5px solid #e0ddd8}
+.trow:last-child{border:none;font-weight:600;font-size:16px;padding-top:10px;color:#1a1a1a}
+.trow span:first-child{color:#888}
+.markup-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:.5px solid #e0ddd8;gap:8px}
+.markup-row label{font-size:13px;color:#888}
+.markup-row input{width:64px!important;border:.5px solid #ddd;border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;text-align:right;flex-shrink:0;background:#fff}
+
+/* ── Buttons ── */
+.gen-btn{display:block;width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;font-family:inherit;letter-spacing:.01em}
+.gen-btn:hover{background:#2a2a2a}
+.pdf-btn{display:block;width:100%;padding:14px;background:#2d6a4a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;font-family:inherit}
+.pdf-btn:hover{background:#235438}
+
+/* ── Rates tab ── */
+.rates-note{background:#fff8f0;border:.5px solid #e8d5b8;border-radius:9px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#a07040;line-height:1.7}
+.rtbl{width:100%;border-collapse:collapse;font-size:13px}
+.rtbl th{text-align:left;font-size:11px;font-weight:600;color:#b5a89a;text-transform:uppercase;letter-spacing:.05em;padding:0 0 7px;border-bottom:.5px solid #eee}
+.rtbl td{padding:7px 8px 7px 0;border-bottom:.5px solid #f5f5f5;vertical-align:middle}
+.rtbl input{border:.5px solid #ddd;border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;width:80px;text-align:right;background:#fafaf8}
+.rtbl tr:last-child td{border-bottom:none}
+
+/* ── Addon rows ── */
+.addon-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.addon-row select{flex:2;min-width:0;border:.5px solid #ddd;border-radius:7px;padding:7px 8px;font-size:13px;font-family:inherit;background:#fafaf8}
+.addon-row input[type=number]{width:52px!important;border:.5px solid #ddd;border-radius:7px;padding:7px 6px;font-size:13px;text-align:center;font-family:inherit;background:#fafaf8}
+.addon-tot{font-size:12px;color:#1a7a42;min-width:60px;text-align:right;flex-shrink:0;font-weight:600}
+.addon-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;line-height:1;padding:0 2px;font-family:inherit;border-radius:4px}
+.addon-del:hover{color:#e44}
+.addon-add{background:#f5f3ef;border:.5px solid #e0ddd8;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:600;color:#b5a89a;cursor:pointer;width:100%;font-family:inherit;text-align:center}
+.addon-add:hover{background:#ede9e3;color:#888}
+
+/* ── Preview ── */
+.preview-wrap{background:#e0ddd8;border-radius:12px;padding:16px;overflow-x:auto}
+.pdf-preview{background:#fff;width:680px;margin:0 auto;padding:38px 44px;font-family:Georgia,serif;color:#1a1a1a;font-size:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);border-radius:4px}
+.pdf-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;padding-bottom:16px;border-bottom:2px solid #1a1a1a;gap:12px}
+.pdf-hd-left{display:flex;align-items:flex-start;gap:14px}
+.pdf-logo{height:56px;width:auto;object-fit:contain}
+.pdf-co{font-size:17px;font-weight:bold}
+.pdf-co-sub{font-size:10px;color:#888;margin-top:2px;line-height:1.8}
+.pdf-qinfo{text-align:right;flex-shrink:0}
+.pdf-qnum{font-size:16px;font-weight:bold}
+.pdf-qlabel{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.06em}
+.pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px;padding:16px;background:#f9f8f5;border-radius:6px}
+.pdf-blabel{font-size:9px;color:#b5a89a;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px}
+.pdf-bval{font-size:11.5px;line-height:1.7;color:#333}
+.pdf-proj-title{font-size:14px;font-weight:bold;margin-bottom:4px;color:#1a1a1a}
+.pdf-sh{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#b5a89a;font-weight:600;border-bottom:1.5px solid #e0ddd8;padding-bottom:5px;margin:18px 0 8px}
+.pdf-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+.pdf-tbl th{text-align:left;font-size:9px;color:#b5a89a;text-transform:uppercase;font-weight:600;letter-spacing:.05em;padding:0 5px 5px 0;border-bottom:.5px solid #e0ddd8}
+.pdf-tbl th.r,.pdf-tbl td.r{text-align:right}
+.pdf-tbl td{padding:6px 5px 6px 0;border-bottom:.5px solid #f2f0ec;vertical-align:top;line-height:1.5}
+.pdf-tbl tr:last-child td{border-bottom:none}
+.ptag{display:inline-block;font-size:9px;border-radius:4px;padding:1px 5px;font-family:system-ui;margin:1px 2px 1px 0;font-weight:500}
+.pdf-totals-wrap{display:flex;justify-content:flex-end;margin:16px 0 18px}
+.pdf-totals-inner{width:230px;background:#f9f8f5;border-radius:6px;padding:12px 14px}
+.pdf-trow{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:.5px solid #ece9e4}
+.pdf-trow.grand{border-top:2px solid #1a1a1a;border-bottom:none;padding-top:9px;font-weight:bold;font-size:14px;margin-top:4px}
+.pdf-notes{border-top:.5px solid #e0ddd8;padding-top:12px;margin-bottom:16px}
+.pdf-nlabel{font-size:9px;color:#b5a89a;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px}
+.pdf-ntext{font-size:11px;color:#555;line-height:1.7;white-space:pre-wrap}
+.pdf-sig{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:26px}
+.pdf-sigline{border-top:.5px solid #ccc;padding-top:5px;font-size:9px;color:#aaa}
+.pdf-footer{margin-top:20px;border-top:.5px solid #e8e5e0;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#b5a89a;font-family:system-ui}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <div class="header-logo-wrap" onclick="document.getElementById('logo-upload').click()" title="Click to upload your logo">
+      <img id="logo-img" src="" alt="SBI" style="height:46px;width:auto;display:none">
+      <div id="logo-placeholder" class="header-placeholder">Add logo</div>
+    </div>
+    <input type="file" id="logo-upload" accept="image/*" style="display:none">
+    <div class="app-header-text">
+      <h1>SBI Design & Build</h1>
+      <p>Louisville, KY &nbsp;·&nbsp; Project Estimator</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('builder')">Builder</button>
+    <button class="tab" onclick="switchTab('rates')">My Rates</button>
+    <button class="tab" onclick="switchTab('preview')">Preview & PDF</button>
+  </div>
+
+  <!-- BUILDER -->
+  <div id="tab-builder">
+    <div class="card">
+      <div class="card-title">Your business</div>
+      <div class="g2">
+        <div class="fld"><label>Company / Name</label><input id="biz-name" placeholder="SBI Design & Build"></div>
+        <div class="fld"><label>License #</label><input id="biz-lic" placeholder="KY-12345"></div>
+        <div class="fld"><label>Phone</label><input id="biz-phone" placeholder="(502) 555-0100"></div>
+        <div class="fld"><label>Email</label><input id="biz-email" placeholder="you@example.com"></div>
+        <div class="fld full"><label>Address</label><input id="biz-addr" placeholder="Louisville, KY"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Client & project</div>
+      <div class="g2">
+        <div class="fld"><label>Client name</label><input id="cl-name" placeholder="Jane Smith"></div>
+        <div class="fld"><label>Client phone</label><input id="cl-phone" placeholder="(502) 555-0200"></div>
+        <div class="fld"><label>Client email</label><input id="cl-email" placeholder="jane@email.com"></div>
+        <div class="fld"><label>Property address</label><input id="cl-addr" placeholder="456 Oak Ave, Louisville, KY"></div>
+        <div class="fld full"><label>Project title</label><input id="proj-title" placeholder="Master Bath Renovation"></div>
+        <div class="fld"><label>Est. start date</label><input id="proj-start" type="date"></div>
+        <div class="fld"><label>Est. duration</label><input id="proj-dur" placeholder="3–5 days"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quote details</div>
+      <div class="g3">
+        <div class="fld"><label>Quote #</label><input id="q-num" value="001"></div>
+        <div class="fld"><label>Quote date</label><input id="q-date" type="date"></div>
+        <div class="fld"><label>Expires</label><input id="q-exp" type="date"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Services</div>
+      <div id="services-list"></div>
+      <div class="add-svc-wrap">
+        <button class="add-svc" style="background:#eef3fc;color:#2a5ba0;border-color:#c0d4f0" id="btn-paint">+ Painting</button>
+        <button class="add-svc" style="background:#eaf6f0;color:#1a7a42;border-color:#b0dfc4" id="btn-tile">+ Tile</button>
+        <button class="add-svc" style="background:#f3eef8;color:#7a3aa0;border-color:#d0b8e8" id="btn-other">+ Wallcovering</button>
+        <button class="add-svc" style="background:#fdf0f0;color:#a03a3a;border-color:#e8c0c0" id="btn-organize">+ Organizing & Closet</button>
+        <button class="add-svc" style="background:#eef2f8;color:#2a5080;border-color:#b8cce0" id="btn-staging">+ Home Staging</button>
+      </div>
+      <div class="totals-wrap">
+        <div class="totals-box">
+          <div class="markup-row"><label>Material markup (%)</label><input id="mat-markup" type="number" min="0" step="0.5" value="20" oninput="updateAllTotals()"></div>
+          <div class="trow"><span>Materials (marked up)</span><span id="tot-mat">$0.00</span></div>
+          <div class="trow"><span>Labor</span><span id="tot-lab">$0.00</span></div>
+          <div class="trow"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+          <div class="markup-row"><label>Overhead / profit (%)</label><input id="op-rate" type="number" min="0" step="0.5" value="15" oninput="updateAllTotals()"></div>
+          <div class="trow"><span>Overhead / profit</span><span id="op-amt">$0.00</span></div>
+          <div class="trow"><span>Total estimate</span><span id="grand-total">$0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Notes & terms</div>
+      <div class="fld"><textarea id="notes" rows="4" placeholder="Payment terms, what's included/excluded, warranty…"></textarea></div>
+    </div>
+    <button class="gen-btn" onclick="switchTab('preview');renderPreview()">Preview & Generate PDF →</button>
+  </div>
+
+  <!-- RATES -->
+  <div id="tab-rates" style="display:none">
+    <div class="rates-note">All rates are your internal cost references. Tile material mid-prices have a 10% waste factor applied automatically.</div>
+    <div class="card">
+      <div class="card-title">Tile material (mid-price / sq ft)</div>
+      <table class="rtbl"><thead><tr><th>Type</th><th>Low</th><th>High</th><th>Mid</th></tr></thead><tbody>
+        <tr><td>Ceramic</td><td style="color:#bbb">$1.50</td><td style="color:#bbb">$3.50</td><td><input id="r-mat-cer" type="number" step="0.1" value="2.50" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Porcelain</td><td style="color:#bbb">$3.00</td><td style="color:#bbb">$7.00</td><td><input id="r-mat-por" type="number" step="0.1" value="5.00" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Subway ceramic</td><td style="color:#bbb">$2.00</td><td style="color:#bbb">$5.00</td><td><input id="r-mat-sub" type="number" step="0.1" value="3.50" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Natural stone</td><td style="color:#bbb">$5.00</td><td style="color:#bbb">$15.00</td><td><input id="r-mat-stone" type="number" step="0.25" value="10.00" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Glass mosaic</td><td style="color:#bbb">$7.00</td><td style="color:#bbb">$20.00</td><td><input id="r-mat-glass" type="number" step="0.25" value="13.50" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Setting materials (per sq ft)</div>
+      <table class="rtbl"><thead><tr><th>Item</th><th>Rate</th></tr></thead><tbody>
+        <tr><td>Thinset mortar</td><td><input id="r-set-thin" type="number" step="0.05" value="0.55" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Grout</td><td><input id="r-set-grout" type="number" step="0.05" value="0.30" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Cement backer (no WP only)</td><td><input id="r-set-backer" type="number" step="0.05" value="0.80" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Misc (spacers, sealer, screws)</td><td><input id="r-set-misc" type="number" step="0.05" value="0.25" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Labor (per sq ft by area & complexity)</div>
+      <table class="rtbl"><thead><tr><th>Complexity</th><th>Master shower</th><th>Tub surround</th><th>Backsplash</th></tr></thead><tbody>
+        <tr><td>Standard</td><td><input id="r-lab-sh-std" type="number" step="0.5" value="16" oninput="updateAllTotals()"></td><td><input id="r-lab-tb-std" type="number" step="0.5" value="12" oninput="updateAllTotals()"></td><td><input id="r-lab-bs-std" type="number" step="0.5" value="10" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Medium</td><td><input id="r-lab-sh-med" type="number" step="0.5" value="20" oninput="updateAllTotals()"></td><td><input id="r-lab-tb-med" type="number" step="0.5" value="16" oninput="updateAllTotals()"></td><td><input id="r-lab-bs-med" type="number" step="0.5" value="14" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Intricate</td><td><input id="r-lab-sh-int" type="number" step="0.5" value="28" oninput="updateAllTotals()"></td><td><input id="r-lab-tb-int" type="number" step="0.5" value="22" oninput="updateAllTotals()"></td><td><input id="r-lab-bs-int" type="number" step="0.5" value="20" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Waterproofing (material + extra labor / sq ft)</div>
+      <table class="rtbl"><thead><tr><th>System</th><th>Material</th><th>Extra labor</th></tr></thead><tbody>
+        <tr><td>None (cement backer)</td><td><input id="r-wp-none-mat" type="number" step="0.1" value="0" oninput="updateAllTotals()"></td><td><input id="r-wp-none-lab" type="number" step="0.1" value="0" oninput="updateAllTotals()"></td></tr>
+        <tr><td>RedGard</td><td><input id="r-wp-rg-mat" type="number" step="0.1" value="1.80" oninput="updateAllTotals()"></td><td><input id="r-wp-rg-lab" type="number" step="0.1" value="1.50" oninput="updateAllTotals()"></td></tr>
+        <tr><td>GoBoard</td><td><input id="r-wp-gb-mat" type="number" step="0.1" value="3.20" oninput="updateAllTotals()"></td><td><input id="r-wp-gb-lab" type="number" step="0.1" value="2.00" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Wedi</td><td><input id="r-wp-wd-mat" type="number" step="0.1" value="4.80" oninput="updateAllTotals()"></td><td><input id="r-wp-wd-lab" type="number" step="0.1" value="2.50" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Schluter Kerdi</td><td><input id="r-wp-sk-mat" type="number" step="0.1" value="2.50" oninput="updateAllTotals()"></td><td><input id="r-wp-sk-lab" type="number" step="0.1" value="2.00" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Niche add-ons (per unit)</div>
+      <table class="rtbl"><thead><tr><th>Type</th><th>Material</th><th>Labor</th></tr></thead><tbody>
+        <tr><td>Single niche</td><td><input id="r-ni-s-mat" type="number" step="5" value="45" oninput="updateAllTotals()"></td><td><input id="r-ni-s-lab" type="number" step="5" value="120" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Double niche</td><td><input id="r-ni-d-mat" type="number" step="5" value="80" oninput="updateAllTotals()"></td><td><input id="r-ni-d-lab" type="number" step="5" value="200" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Custom/large niche</td><td><input id="r-ni-c-mat" type="number" step="5" value="120" oninput="updateAllTotals()"></td><td><input id="r-ni-c-lab" type="number" step="5" value="280" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Bench add-ons (per unit)</div>
+      <table class="rtbl"><thead><tr><th>Type</th><th>Material</th><th>Labor</th></tr></thead><tbody>
+        <tr><td>Built-in bench</td><td><input id="r-bn-bi-mat" type="number" step="5" value="150" oninput="updateAllTotals()"></td><td><input id="r-bn-bi-lab" type="number" step="5" value="250" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Floating bench</td><td><input id="r-bn-fl-mat" type="number" step="5" value="200" oninput="updateAllTotals()"></td><td><input id="r-bn-fl-lab" type="number" step="5" value="320" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Custom bench</td><td><input id="r-bn-cu-mat" type="number" step="5" value="300" oninput="updateAllTotals()"></td><td><input id="r-bn-cu-lab" type="number" step="5" value="420" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Painting rates (all-in)</div>
+      <div class="g2">
+        <div class="fld"><label>Interior walls & ceiling (/ sq ft)</label><input id="r-paint-int" type="number" step="0.05" value="1.75" oninput="updateAllTotals()"></div>
+        <div class="fld"><label>Exterior siding (/ sq ft)</label><input id="r-paint-ext" type="number" step="0.05" value="1.90" oninput="updateAllTotals()"></div>
+        <div class="fld"><label>Trim & doors (/ ln ft)</label><input id="r-paint-trim" type="number" step="0.05" value="3.50" oninput="updateAllTotals()"></div>
+        <div class="fld"><label>Cabinet painting (/ door)</label><input id="r-paint-cab" type="number" step="0.5" value="75.00" oninput="updateAllTotals()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Organizing & closet rates</div>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="fld"><label>Organizing — hourly rate</label><input id="r-org-hourly" type="number" step="0.5" value="65.00" oninput="updateAllTotals()"></div>
+        <div class="fld"><label>Closet system — per linear foot</label><input id="r-org-lnft" type="number" step="0.5" value="38.00" oninput="updateAllTotals()"></div>
+      </div>
+      <div class="card-title">Closet feature add-ons (per unit)</div>
+      <table class="rtbl"><thead><tr><th>Feature</th><th>Material</th><th>Labor</th></tr></thead><tbody>
+        <tr><td>Drawer unit</td><td><input id="r-cf-drawer-mat" type="number" step="5" value="120" oninput="updateAllTotals()"></td><td><input id="r-cf-drawer-lab" type="number" step="5" value="80" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Shoe rack</td><td><input id="r-cf-shoe-mat" type="number" step="5" value="65" oninput="updateAllTotals()"></td><td><input id="r-cf-shoe-lab" type="number" step="5" value="40" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Belt/tie rack</td><td><input id="r-cf-belt-mat" type="number" step="5" value="35" oninput="updateAllTotals()"></td><td><input id="r-cf-belt-lab" type="number" step="5" value="25" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Jewelry insert</td><td><input id="r-cf-jewelry-mat" type="number" step="5" value="85" oninput="updateAllTotals()"></td><td><input id="r-cf-jewelry-lab" type="number" step="5" value="35" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Pull-out hamper</td><td><input id="r-cf-hamper-mat" type="number" step="5" value="95" oninput="updateAllTotals()"></td><td><input id="r-cf-hamper-lab" type="number" step="5" value="45" oninput="updateAllTotals()"></td></tr>
+        <tr><td>LED lighting</td><td><input id="r-cf-light-mat" type="number" step="5" value="75" oninput="updateAllTotals()"></td><td><input id="r-cf-light-lab" type="number" step="5" value="50" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Mirror</td><td><input id="r-cf-mirror-mat" type="number" step="5" value="150" oninput="updateAllTotals()"></td><td><input id="r-cf-mirror-lab" type="number" step="5" value="60" oninput="updateAllTotals()"></td></tr>
+        <tr><td>Center island</td><td><input id="r-cf-island-mat" type="number" step="10" value="450" oninput="updateAllTotals()"></td><td><input id="r-cf-island-lab" type="number" step="10" value="200" oninput="updateAllTotals()"></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="tab-preview" style="display:none">
+    <div class="preview-wrap" id="preview-root"></div>
+    <button class="pdf-btn" onclick="generatePNG()">⬇ Download Quote (PNG)</button>
+  </div>
+</div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fv = id => parseFloat($(id)?.value) || 0;
+const v  = id => $(id)?.value || '';
+const fmt = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const qtyLbl = u => ({sf:'Square footage',lf:'Linear feet',hrs:'Hours',rooms:'# of rooms',photos:'# of photos',doors:'Quantity',job:'Quantity',shelves:'# of shelves'}[u]||'Quantity');
+const rateLbl = u => ({hrs:'Hourly rate',rooms:'Rate / room',photos:'Rate / photo',lf:'Rate / ln ft',sf:'Rate / sq ft'}[u]||'Flat rate');
+
+let svcId = 0, services = [], LOGO_SRC = '';
+
+// ── Logo ──────────────────────────────────────────────────────
+$('logo-upload').addEventListener('change', function(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{LOGO_SRC=ev.target.result;$('logo-img').src=LOGO_SRC;$('logo-img').style.display='block';$('logo-placeholder').style.display='none';};
+  r.readAsDataURL(f);
+});
+
+// ── Data tables ───────────────────────────────────────────────
+const TILE_MATS  = [{k:'cer',l:'Ceramic',r:'r-mat-cer'},{k:'por',l:'Porcelain',r:'r-mat-por'},{k:'sub',l:'Subway ceramic',r:'r-mat-sub'},{k:'stone',l:'Natural stone',r:'r-mat-stone'},{k:'glass',l:'Glass mosaic',r:'r-mat-glass'}];
+const TILE_AREAS = [{k:'sh',l:'Master shower'},{k:'tb',l:'Tub surround'},{k:'bs',l:'Backsplash'}];
+const TILE_COMP  = [{k:'std',l:'Standard'},{k:'med',l:'Medium'},{k:'int',l:'Intricate'}];
+const WP_SYS     = [{k:'none',l:'None (cement backer)',m:'r-wp-none-mat',lb:'r-wp-none-lab'},{k:'rg',l:'RedGard',m:'r-wp-rg-mat',lb:'r-wp-rg-lab'},{k:'gb',l:'GoBoard',m:'r-wp-gb-mat',lb:'r-wp-gb-lab'},{k:'wd',l:'Wedi',m:'r-wp-wd-mat',lb:'r-wp-wd-lab'},{k:'sk',l:'Schluter Kerdi',m:'r-wp-sk-mat',lb:'r-wp-sk-lab'}];
+const NICHES     = [{k:'s',l:'Single niche',m:'r-ni-s-mat',lb:'r-ni-s-lab'},{k:'d',l:'Double niche',m:'r-ni-d-mat',lb:'r-ni-d-lab'},{k:'c',l:'Custom/lg niche',m:'r-ni-c-mat',lb:'r-ni-c-lab'}];
+const BENCHES    = [{k:'bi',l:'Built-in bench',m:'r-bn-bi-mat',lb:'r-bn-bi-lab'},{k:'fl',l:'Floating bench',m:'r-bn-fl-mat',lb:'r-bn-fl-lab'},{k:'cu',l:'Custom bench',m:'r-bn-cu-mat',lb:'r-bn-cu-lab'}];
+const PAINT_T    = [{k:'int',l:'Interior walls & ceiling',r:'r-paint-int',u:'sf'},{k:'ext',l:'Exterior siding',r:'r-paint-ext',u:'sf'},{k:'trim',l:'Trim & doors',r:'r-paint-trim',u:'lf'},{k:'cab',l:'Cabinet painting',r:'r-paint-cab',u:'doors'}];
+const OTHER_T    = [{k:'accent',l:'Accent wall',u:'sf',dr:3.50},{k:'wallpaper',l:'Wallpapering',u:'sf',dr:4.50},{k:'shelves',l:'Floating shelves',u:'shelves',dr:120},{k:'mural',l:'Mural',u:'sf',dr:18},{k:'builtin',l:'Built-ins',u:'lf',dr:250},{k:'tv',l:'TV mounting',u:'job',dr:175},{k:'drywall',l:'Drywall repair',u:'sf',dr:5.50},{k:'other',l:'Other',u:'job',dr:0}];
+const ORG_T      = [{k:'consult',l:'Initial consultation',u:'hrs',p:'hourly'},{k:'closet',l:'Closet design & install',u:'lf',p:'lnft'},{k:'walkin',l:'Walk-in closet system',u:'lf',p:'lnft'},{k:'pantry',l:'Pantry organization',u:'hrs',p:'hourly'},{k:'garage',l:'Garage organization',u:'hrs',p:'hourly'},{k:'bedroom',l:'Bedroom organization',u:'hrs',p:'hourly'},{k:'kitchen',l:'Kitchen organization',u:'hrs',p:'hourly'},{k:'office',l:'Home office organization',u:'hrs',p:'hourly'},{k:'wholeHome',l:'Whole-home organization',u:'hrs',p:'hourly'},{k:'shelving',l:'Custom shelving system',u:'lf',p:'lnft'},{k:'moving',l:'Move-in/out organizing',u:'hrs',p:'hourly'},{k:'other',l:'Other organizing service',u:'hrs',p:'hourly'}];
+const CF_T       = [{k:'drawer',l:'Drawer unit',m:'r-cf-drawer-mat',lb:'r-cf-drawer-lab'},{k:'shoe',l:'Shoe rack',m:'r-cf-shoe-mat',lb:'r-cf-shoe-lab'},{k:'belt',l:'Belt/tie rack',m:'r-cf-belt-mat',lb:'r-cf-belt-lab'},{k:'jewelry',l:'Jewelry insert',m:'r-cf-jewelry-mat',lb:'r-cf-jewelry-lab'},{k:'hamper',l:'Pull-out hamper',m:'r-cf-hamper-mat',lb:'r-cf-hamper-lab'},{k:'light',l:'LED lighting',m:'r-cf-light-mat',lb:'r-cf-light-lab'},{k:'mirror',l:'Mirror',m:'r-cf-mirror-mat',lb:'r-cf-mirror-lab'},{k:'island',l:'Center island',m:'r-cf-island-mat',lb:'r-cf-island-lab'}];
+const STAG_T     = [{k:'consult',l:'Staging consultation',u:'job',dr:250},{k:'occupied',l:'Occupied home staging',u:'hrs',dr:85},{k:'vacant',l:'Vacant home staging',u:'job',dr:2400},{k:'room',l:'Individual room staging',u:'rooms',dr:550},{k:'partial',l:'Partial home staging',u:'rooms',dr:550},{k:'furniture',l:'Furniture rental coordination',u:'hrs',dr:85},{k:'declutter',l:'Decluttering consult',u:'hrs',dr:85},{k:'photo',l:'Listing photo prep',u:'job',dr:175},{k:'virtual',l:'Virtual staging',u:'photos',dr:75},{k:'other',l:'Other staging service',u:'hrs',dr:85}];
+
+// ── Calc ──────────────────────────────────────────────────────
+function calcTile(s){
+  const sqft=s.sqft||0, mat=TILE_MATS.find(x=>x.k===s.tileMat)||TILE_MATS[0], wp=WP_SYS.find(x=>x.k===s.wp)||WP_SYS[0];
+  const tm=sqft*fv(mat.r)*1.10, ts=sqft*fv('r-set-thin'), gr=sqft*fv('r-set-grout'), bk=s.wp==='none'?sqft*fv('r-set-backer'):0, ms=sqft*fv('r-set-misc'), wm=sqft*fv(wp.m);
+  let nm=0,nl=0; (s.niches||[]).forEach(n=>{const t=NICHES.find(x=>x.k===n.type)||NICHES[0];nm+=fv(t.m)*(n.qty||0);nl+=fv(t.lb)*(n.qty||0);});
+  let bm=0,bl=0; (s.benches||[]).forEach(b=>{const t=BENCHES.find(x=>x.k===b.type)||BENCHES[0];bm+=fv(t.m)*(b.qty||0);bl+=fv(t.lb)*(b.qty||0);});
+  const raw=tm+ts+gr+bk+ms+wm+nm+bm, mk=fv('mat-markup')/100, mkd=raw*(1+mk);
+  const tl=sqft*fv(`r-lab-${s.area}-${s.complexity}`), wl=sqft*fv(wp.lb), totL=tl+wl+nl+bl;
+  return{tm,ts,gr,bk,ms,wm,nm,bm,raw,mkd,tl,wl,nl,bl,totL,sub:mkd+totL,
+    matL:mat.l,wpL:wp.l,areaL:(TILE_AREAS.find(x=>x.k===s.area)||TILE_AREAS[0]).l,compL:(TILE_COMP.find(x=>x.k===s.complexity)||TILE_COMP[0]).l};
+}
+function calcPaint(s){const pt=PAINT_T.find(x=>x.k===s.paintType)||PAINT_T[0];return{tot:(s.sqft||0)*fv(pt.r),l:pt.l,u:pt.u,rate:fv(pt.r)};}
+function calcOther(s){const ot=OTHER_T.find(x=>x.k===s.otherType)||OTHER_T[0];return{tot:(s.sqft||0)*(s.rate??ot.dr),l:ot.l,u:ot.u,rate:s.rate??ot.dr};}
+function calcOrg(s){
+  const sv=ORG_T.find(x=>x.k===s.orgType)||ORG_T[0];
+  const dr=sv.p==='lnft'?fv('r-org-lnft'):fv('r-org-hourly');
+  const rate=s.rate!=null?s.rate:dr;
+  const base=(s.qty||0)*rate;
+  let fm=0,fl=0; (s.features||[]).forEach(f=>{const t=CF_T.find(x=>x.k===f.type)||CF_T[0];fm+=fv(t.m)*(f.qty||0);fl+=fv(t.lb)*(f.qty||0);});
+  const mkFm=fm*(1+fv('mat-markup')/100);
+  return{rate,base,fm,fl,mkFm,tot:base+mkFm+fl,l:sv.l,u:sv.u};
+}
+function calcStag(s){const sv=STAG_T.find(x=>x.k===s.stagType)||STAG_T[0];const rate=s.rate!=null?s.rate:sv.dr;return{rate,tot:(s.qty||0)*rate,l:sv.l,u:sv.u};}
+
+function svcTotal(s){
+  if(s.TYPE==='paint')    return calcPaint(s).tot;
+  if(s.TYPE==='tile')     return calcTile(s).sub;
+  if(s.TYPE==='other')    return calcOther(s).tot;
+  if(s.TYPE==='organize') return calcOrg(s).tot;
+  if(s.TYPE==='staging')  return calcStag(s).tot;
+  return 0;
+}
+function svcML(s){
+  if(s.TYPE==='paint')    {const r=calcPaint(s);return{m:0,l:r.tot};}
+  if(s.TYPE==='tile')     {const r=calcTile(s); return{m:r.mkd,l:r.totL};}
+  if(s.TYPE==='other')    {const r=calcOther(s);return{m:0,l:r.tot};}
+  if(s.TYPE==='organize') {const r=calcOrg(s);  return{m:r.mkFm,l:r.base+r.fl};}
+  if(s.TYPE==='staging')  {const r=calcStag(s); return{m:0,l:r.tot};}
+  return{m:0,l:0};
+}
+
+// ── Totals ────────────────────────────────────────────────────
+function bdHTML(s,r){
+  return`<div style="font-size:11px;font-weight:500;color:#2a6a45;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Cost breakdown</div>
+  <div class="brow"><span class="blabel">Tile material (×1.10 waste)</span><span>${fmt(r.tm)}</span></div>
+  <div class="brow"><span class="blabel">Setting materials</span><span>${fmt(r.ts+r.gr+r.bk+r.ms)}</span></div>
+  ${r.wm>0?`<div class="brow"><span class="blabel">WP material (${r.wpL})</span><span>${fmt(r.wm)}</span></div>`:''}
+  ${r.nm>0?`<div class="brow"><span class="blabel">Niche materials</span><span>${fmt(r.nm)}</span></div>`:''}
+  ${r.bm>0?`<div class="brow"><span class="blabel">Bench materials</span><span>${fmt(r.bm)}</span></div>`:''}
+  <div class="brow"><span class="blabel">Material markup (${fv('mat-markup')}%)</span><span>${fmt(r.mkd-r.raw)}</span></div>
+  <div class="brow"><span class="blabel">Tile labor (${r.areaL} · ${r.compL})</span><span>${fmt(r.tl)}</span></div>
+  ${r.wl>0?`<div class="brow"><span class="blabel">WP install labor</span><span>${fmt(r.wl)}</span></div>`:''}
+  ${r.nl>0?`<div class="brow"><span class="blabel">Niche labor</span><span>${fmt(r.nl)}</span></div>`:''}
+  ${r.bl>0?`<div class="brow"><span class="blabel">Bench labor</span><span>${fmt(r.bl)}</span></div>`:''}
+  <div class="brow total-row"><span>Line subtotal (before O&P)</span><span>${fmt(r.sub)}</span></div>`;
+}
+
+function updateAllTotals(){
+  services.forEach(s=>{
+    const el=$(`lt-${s.id}`); if(el) el.value=fmt(svcTotal(s));
+    if(s.TYPE==='tile'){const bd=$(`bd-${s.id}`);if(bd)bd.innerHTML=bdHTML(s,calcTile(s));}
+  });
+  let tm=0,tl=0; services.forEach(s=>{const r=svcML(s);tm+=r.m;tl+=r.l;});
+  const sub=tm+tl, op=sub*(fv('op-rate')/100), grand=sub+op;
+  $('tot-mat').textContent=fmt(tm); $('tot-lab').textContent=fmt(tl);
+  $('subtotal').textContent=fmt(sub); $('op-amt').textContent=fmt(op); $('grand-total').textContent=fmt(grand);
+}
+
+// ── Add services — uses data-type attribute on buttons ────────
+function initButtons(){
+  [['btn-paint','paint'],['btn-tile','tile'],['btn-other','other'],['btn-organize','organize'],['btn-staging','staging']].forEach(([id,t])=>{
+    $(id).addEventListener('click', function(){ addSvc(t); });
+  });
+}
+
+function addSvc(TYPE){
+  const id = svcId++;
+  let s;
+  if      (TYPE==='paint')    s={id,TYPE,desc:'',sqft:0,paintType:'int'};
+  else if (TYPE==='tile')     s={id,TYPE,desc:'',sqft:0,tileMat:'cer',area:'sh',complexity:'std',wp:'none',niches:[],benches:[]};
+  else if (TYPE==='other')    s={id,TYPE,desc:'',sqft:1,otherType:'accent',rate:OTHER_T[0].dr};
+  else if (TYPE==='organize') s={id,TYPE,desc:'',qty:1,orgType:'consult',rate:null,features:[]};
+  else if (TYPE==='staging')  s={id,TYPE,desc:'',qty:1,stagType:'consult',rate:null};
+  else return;
+  services.push(s);
+  buildDOM(s);
+  updateAllTotals();
+}
+
+function removeSvc(id){
+  services=services.filter(s=>s.id!==id);
+  const el=$(`sb-${id}`); if(el)el.remove();
+  updateAllTotals();
+}
+
+// ── DOM builders — one function per type ──────────────────────
+function buildDOM(s){
+  const div=document.createElement('div');
+  div.className='svc-block'; div.id=`sb-${s.id}`;
+
+  if(s.TYPE==='paint'){
+    div.style.background='#f7f9fe';
+    div.style.borderLeft='3px solid #5a8fd8';
+    const pt=PAINT_T.find(x=>x.k===s.paintType)||PAINT_T[0];
+    const opts=PAINT_T.map(x=>`<option value="${x.k}"${x.k===s.paintType?' selected':''}>${x.l}</option>`).join('');
+    div.innerHTML=`
+      <div class="svc-hd"><span class="svc-badge" style="color:#2a5ba0"><span class="svc-icon" style="background:#deeafa">🎨</span> Painting</span><button class="del-btn" onclick="removeSvc(${s.id})">×</button></div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="fld"><label>Service type</label><select id="pt-${s.id}">${opts}</select></div>
+        <div class="fld"><label>Description / room</label><input id="desc-${s.id}" placeholder="e.g. Living room walls"></div>
+      </div>
+      <div class="g3">
+        <div class="fld"><label id="ql-${s.id}">${qtyLbl(pt.u)}</label><input id="qty-${s.id}" type="number" min="0" step="1" placeholder="0"></div>
+        <div class="fld"><label>All-in rate</label><input id="rd-${s.id}" readonly value="${fmt(fv(pt.r))} / ${pt.u}"></div>
+        <div class="fld"><label>Line total</label><input id="lt-${s.id}" readonly value="$0.00" style="background:#deeafa;color:#2a5ba0;font-weight:600;border-color:#c0d4f0"></div>
+      </div>`;
+    div.querySelector(`#desc-${s.id}`).addEventListener('input',e=>s.desc=e.target.value);
+    div.querySelector(`#qty-${s.id}`).addEventListener('input',e=>{s.sqft=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#pt-${s.id}`).addEventListener('change',e=>{
+      s.paintType=e.target.value;
+      const pt2=PAINT_T.find(x=>x.k===s.paintType)||PAINT_T[0];
+      $(`ql-${s.id}`).textContent=qtyLbl(pt2.u);
+      $(`rd-${s.id}`).value=`${fmt(fv(pt2.r))} / ${pt2.u}`;
+      updateAllTotals();
+    });
+  }
+
+  else if(s.TYPE==='tile'){
+    div.style.background='#f6fdf9';
+    div.style.borderLeft='3px solid #4db87a';
+    const mo=TILE_MATS.map(x=>`<option value="${x.k}"${x.k===s.tileMat?' selected':''}>${x.l}</option>`).join('');
+    const ao=TILE_AREAS.map(x=>`<option value="${x.k}"${x.k===s.area?' selected':''}>${x.l}</option>`).join('');
+    const co=TILE_COMP.map(x=>`<option value="${x.k}"${x.k===s.complexity?' selected':''}>${x.l}</option>`).join('');
+    const wo=WP_SYS.map(x=>`<option value="${x.k}"${x.k===s.wp?' selected':''}>${x.l}</option>`).join('');
+    const r=calcTile(s);
+    div.innerHTML=`
+      <div class="svc-hd"><span class="svc-badge" style="color:#1a7a42"><span class="svc-icon" style="background:#c8f0da">🔲</span> Tile Installation</span><button class="del-btn" onclick="removeSvc(${s.id})">×</button></div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="fld"><label>Description / room</label><input id="desc-${s.id}" placeholder="e.g. Master bath shower"></div>
+        <div class="fld"><label>Square footage</label><input id="qty-${s.id}" type="number" min="0" step="1" placeholder="0"></div>
+      </div>
+      <div class="g4" style="margin-bottom:10px">
+        <div class="fld"><label>Tile material</label><select id="tm-${s.id}">${mo}</select></div>
+        <div class="fld"><label>Area type</label><select id="ar-${s.id}">${ao}</select></div>
+        <div class="fld"><label>Complexity</label><select id="cx-${s.id}">${co}</select></div>
+        <div class="fld"><label>Waterproofing</label><select id="wp-${s.id}">${wo}</select></div>
+      </div>
+      <div class="fld" style="margin-bottom:10px"><label>Line total</label>
+        <input id="lt-${s.id}" readonly value="$0.00" style="background:#c8f0da;color:#1a7a42;font-weight:600;border-color:#a0d8b8;max-width:160px"></div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:130px"><div style="font-size:11px;color:#aaa;text-transform:uppercase;margin-bottom:6px">Niches</div><div id="nc-${s.id}"></div><button class="addon-add" onclick="addNiche(${s.id})">+ Add niche</button></div>
+        <div style="flex:1;min-width:130px"><div style="font-size:11px;color:#aaa;text-transform:uppercase;margin-bottom:6px">Benches</div><div id="bn-${s.id}"></div><button class="addon-add" onclick="addBench(${s.id})">+ Add bench</button></div>
+      </div>
+      <div class="breakdown-box" id="bd-${s.id}">${bdHTML(s,r)}</div>`;
+    div.querySelector(`#desc-${s.id}`).addEventListener('input',e=>s.desc=e.target.value);
+    div.querySelector(`#qty-${s.id}`).addEventListener('input',e=>{s.sqft=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#tm-${s.id}`).addEventListener('change',e=>{s.tileMat=e.target.value;updateAllTotals();});
+    div.querySelector(`#ar-${s.id}`).addEventListener('change',e=>{s.area=e.target.value;updateAllTotals();});
+    div.querySelector(`#cx-${s.id}`).addEventListener('change',e=>{s.complexity=e.target.value;updateAllTotals();});
+    div.querySelector(`#wp-${s.id}`).addEventListener('change',e=>{s.wp=e.target.value;updateAllTotals();});
+  }
+
+  else if(s.TYPE==='other'){
+    div.style.background='#faf7fe';
+    div.style.borderLeft='3px solid #9a5ac8';
+    const ot=OTHER_T.find(x=>x.k===s.otherType)||OTHER_T[0];
+    const opts=OTHER_T.map(x=>`<option value="${x.k}"${x.k===s.otherType?' selected':''}>${x.l}</option>`).join('');
+    div.innerHTML=`
+      <div class="svc-hd"><span class="svc-badge" style="color:#7a3aa0"><span class="svc-icon" style="background:#e8d8f8">🪚</span> Wallcovering / Carpentry</span><button class="del-btn" onclick="removeSvc(${s.id})">×</button></div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="fld"><label>Service type</label><select id="ot-${s.id}">${opts}</select></div>
+        <div class="fld"><label>Description / notes</label><input id="desc-${s.id}" placeholder="e.g. Shiplap accent wall"></div>
+      </div>
+      <div class="g3">
+        <div class="fld"><label id="ql-${s.id}">${qtyLbl(ot.u)}</label><input id="qty-${s.id}" type="number" min="0" step="1" value="${s.sqft||1}" placeholder="1"></div>
+        <div class="fld"><label>Rate (all-in)</label><input id="rt-${s.id}" type="number" min="0" step="0.5" value="${s.rate??ot.dr}"></div>
+        <div class="fld"><label>Line total</label><input id="lt-${s.id}" readonly value="$0.00" style="background:#e8d8f8;color:#7a3aa0;font-weight:600;border-color:#d0b8e8"></div>
+      </div>
+      <div style="font-size:11px;color:#b090c8;margin-top:4px">All-in rate. Edit to match your quote.</div>`;
+    div.querySelector(`#desc-${s.id}`).addEventListener('input',e=>s.desc=e.target.value);
+    div.querySelector(`#qty-${s.id}`).addEventListener('input',e=>{s.sqft=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#rt-${s.id}`).addEventListener('input',e=>{s.rate=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#ot-${s.id}`).addEventListener('change',e=>{
+      s.otherType=e.target.value;
+      const ot2=OTHER_T.find(x=>x.k===s.otherType)||OTHER_T[0];
+      $(`ql-${s.id}`).textContent=qtyLbl(ot2.u);
+      s.rate=ot2.dr; $(`rt-${s.id}`).value=ot2.dr;
+      updateAllTotals();
+    });
+  }
+
+  else if(s.TYPE==='organize'){
+    div.style.background='#fef8f8';
+    div.style.borderLeft='3px solid #c05a5a';
+    const sv=ORG_T.find(x=>x.k===s.orgType)||ORG_T[0];
+    const dr=sv.p==='lnft'?fv('r-org-lnft'):fv('r-org-hourly');
+    const opts=ORG_T.map(x=>`<option value="${x.k}"${x.k===s.orgType?' selected':''}>${x.l}</option>`).join('');
+    div.innerHTML=`
+      <div class="svc-hd"><span class="svc-badge" style="color:#a03a3a"><span class="svc-icon" style="background:#f8d8d8">🗂️</span> Organizing & Closet</span><button class="del-btn" onclick="removeSvc(${s.id})">×</button></div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="fld"><label>Service type</label><select id="or-${s.id}">${opts}</select></div>
+        <div class="fld"><label>Description / notes</label><input id="desc-${s.id}" placeholder="e.g. Master bedroom walk-in closet"></div>
+      </div>
+      <div class="g3" style="margin-bottom:6px">
+        <div class="fld"><label id="ql-${s.id}">${qtyLbl(sv.u)}</label><input id="qty-${s.id}" type="number" min="0" step="0.5" value="${s.qty||1}" placeholder="1"></div>
+        <div class="fld"><label id="rl-${s.id}">${rateLbl(sv.u)}</label><input id="rt-${s.id}" type="number" min="0" step="0.5" value="${s.rate!=null?s.rate:dr}"></div>
+        <div class="fld"><label>Line total</label><input id="lt-${s.id}" readonly value="$0.00" style="background:#f8d8d8;color:#a03a3a;font-weight:600;border-color:#e8c0c0"></div>
+      </div>
+      <div style="font-size:11px;color:#c08080;margin-bottom:10px">Edit rate to match your quote.</div>
+      <div class="divider"></div>
+      <div><div style="font-size:11px;font-weight:600;color:#b5a89a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Closet features</div><div id="ft-${s.id}"></div><button class="addon-add" onclick="addFeature(${s.id})">+ Add closet feature</button></div>`;
+    div.querySelector(`#desc-${s.id}`).addEventListener('input',e=>s.desc=e.target.value);
+    div.querySelector(`#qty-${s.id}`).addEventListener('input',e=>{s.qty=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#rt-${s.id}`).addEventListener('input',e=>{s.rate=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#or-${s.id}`).addEventListener('change',e=>{
+      s.orgType=e.target.value;
+      const sv2=ORG_T.find(x=>x.k===s.orgType)||ORG_T[0];
+      $(`ql-${s.id}`).textContent=qtyLbl(sv2.u);
+      $(`rl-${s.id}`).textContent=rateLbl(sv2.u);
+      const dr2=sv2.p==='lnft'?fv('r-org-lnft'):fv('r-org-hourly');
+      s.rate=null; $(`rt-${s.id}`).value=dr2;
+      updateAllTotals();
+    });
+  }
+
+  else if(s.TYPE==='staging'){
+    div.style.background='#f6f9fd';
+    div.style.borderLeft='3px solid #5a80b8';
+    const sv=STAG_T.find(x=>x.k===s.stagType)||STAG_T[0];
+    const opts=STAG_T.map(x=>`<option value="${x.k}"${x.k===s.stagType?' selected':''}>${x.l}</option>`).join('');
+    div.innerHTML=`
+      <div class="svc-hd"><span class="svc-badge" style="color:#2a5080"><span class="svc-icon" style="background:#d0e4f4">🏡</span> Home Staging</span><button class="del-btn" onclick="removeSvc(${s.id})">×</button></div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="fld"><label>Service type</label><select id="st-${s.id}">${opts}</select></div>
+        <div class="fld"><label>Description / notes</label><input id="desc-${s.id}" placeholder="e.g. 3BR occupied home, Highlands area"></div>
+      </div>
+      <div class="g3">
+        <div class="fld"><label id="ql-${s.id}">${qtyLbl(sv.u)}</label><input id="qty-${s.id}" type="number" min="0" step="0.5" value="${s.qty||1}" placeholder="1"></div>
+        <div class="fld"><label id="rl-${s.id}">${rateLbl(sv.u)}</label><input id="rt-${s.id}" type="number" min="0" step="5" value="${s.rate!=null?s.rate:sv.dr}"></div>
+        <div class="fld"><label>Line total</label><input id="lt-${s.id}" readonly value="$0.00" style="background:#d0e4f4;color:#2a5080;font-weight:600;border-color:#b0cce0"></div>
+      </div>
+      <div style="font-size:11px;color:#8090a8;margin-top:6px">Competitive Louisville & Lexington rates. Edit to match your quote. Furniture rental billed separately.</div>`;
+    div.querySelector(`#desc-${s.id}`).addEventListener('input',e=>s.desc=e.target.value);
+    div.querySelector(`#qty-${s.id}`).addEventListener('input',e=>{s.qty=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#rt-${s.id}`).addEventListener('input',e=>{s.rate=parseFloat(e.target.value)||0;updateAllTotals();});
+    div.querySelector(`#st-${s.id}`).addEventListener('change',e=>{
+      s.stagType=e.target.value;
+      const sv2=STAG_T.find(x=>x.k===s.stagType)||STAG_T[0];
+      $(`ql-${s.id}`).textContent=qtyLbl(sv2.u);
+      $(`rl-${s.id}`).textContent=rateLbl(sv2.u);
+      s.rate=null; $(`rt-${s.id}`).value=sv2.dr;
+      updateAllTotals();
+    });
+  }
+
+  $('services-list').appendChild(div);
+}
+
+// ── Niche / bench / feature rows ──────────────────────────────
+function addNiche(sid){const s=services.find(x=>x.id===sid);if(!s)return;const i=s.niches.length;s.niches.push({type:'s',qty:1});appendAddon(`nc-${sid}`,i,'niche',sid);}
+function addBench(sid){const s=services.find(x=>x.id===sid);if(!s)return;const i=s.benches.length;s.benches.push({type:'bi',qty:1});appendAddon(`bn-${sid}`,i,'bench',sid);}
+function addFeature(sid){const s=services.find(x=>x.id===sid);if(!s)return;const i=s.features.length;s.features.push({type:'drawer',qty:1});appendAddon(`ft-${sid}`,i,'feature',sid);}
+
+function appendAddon(cid,idx,kind,sid){
+  const s=services.find(x=>x.id===sid);if(!s)return;
+  const arr=kind==='niche'?s.niches:kind==='bench'?s.benches:s.features;
+  const DATA=kind==='niche'?NICHES:kind==='bench'?BENCHES:CF_T;
+  const item=arr[idx];
+  const c=$(cid);if(!c)return;
+  const row=document.createElement('div');row.className='addon-row';row.id=`${kind}-${sid}-${idx}`;
+  const opts=DATA.map(x=>`<option value="${x.k}"${x.k===item.type?' selected':''}>${x.l}</option>`).join('');
+  row.innerHTML=`<select>${opts}</select><input type="number" min="0" step="1" value="${item.qty}"><span id="${kind}t-${sid}-${idx}" class="addon-tot">$0.00</span><button class="addon-del" onclick="removeAddon('${kind}',${sid},${idx})">×</button>`;
+  row.querySelector('select').addEventListener('change',e=>{item.type=e.target.value;refreshAddonTot(kind,sid,idx,item,DATA);updateAllTotals();});
+  row.querySelector('input').addEventListener('input',e=>{item.qty=parseInt(e.target.value)||0;refreshAddonTot(kind,sid,idx,item,DATA);updateAllTotals();});
+  c.appendChild(row);
+  refreshAddonTot(kind,sid,idx,item,DATA);
+  updateAllTotals();
+}
+
+function refreshAddonTot(kind,sid,idx,item,DATA){
+  const t=DATA.find(x=>x.k===item.type)||DATA[0];
+  const el=$(`${kind}t-${sid}-${idx}`);
+  if(el) el.textContent=fmt((fv(t.m)+fv(t.lb))*(item.qty||0));
+}
+
+function removeAddon(kind,sid,idx){
+  const s=services.find(x=>x.id===sid);if(!s)return;
+  const arr=kind==='niche'?s.niches:kind==='bench'?s.benches:s.features;
+  const DATA=kind==='niche'?NICHES:kind==='bench'?BENCHES:CF_T;
+  const cid=kind==='niche'?`nc-${sid}`:kind==='bench'?`bn-${sid}`:`ft-${sid}`;
+  arr.splice(idx,1);
+  const c=$(cid);if(!c)return;
+  c.innerHTML='';
+  arr.forEach((_,i)=>appendAddon(cid,i,kind,sid));
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(t){
+  ['builder','rates','preview'].forEach(n=>$('tab-'+n).style.display=n===t?'':'none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['builder','rates','preview'][i]===t));
+}
+function fmtD(id){const val=v(id);if(!val)return'';return new Date(val+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+
+// ── Preview ───────────────────────────────────────────────────
+function renderPreview(){
+  let tm=0,tl=0; services.forEach(s=>{const r=svcML(s);tm+=r.m;tl+=r.l;});
+  const sub=tm+tl,op=sub*(fv('op-rate')/100),grand=sub+op;
+
+  const byType=t=>services.filter(s=>s.TYPE===t);
+  const row=(s,cells)=>`<tr>${cells.map(c=>`<td${c.r?' class="r"':''}>${c.v}</td>`).join('')}</tr>`;
+  const tblHdr=(title,ths)=>`<div class="pdf-sh">${title}</div><table class="pdf-tbl"><thead><tr>${ths.map(h=>`<th${h.r?' class="r"':''}>${h.v}</th>`).join('')}</tr></thead><tbody>`;
+
+  let html='';
+  if(byType('staging').length){
+    html+=tblHdr('Home Staging',[{v:'Description'},{v:'Qty',r:1},{v:'Rate',r:1},{v:'Total',r:1}]);
+    byType('staging').forEach(s=>{const r=calcStag(s);html+=row(s,[{v:`${esc(s.desc)||r.l}<br><span class="ptag" style="background:#e8f0fa;color:#2a5080">${r.l}</span>`},{v:`${s.qty||0} ${r.u}`,r:1},{v:`${fmt(r.rate)}/${r.u}`,r:1},{v:fmt(r.tot),r:1}]);});
+    html+='</tbody></table>';
+  }
+  if(byType('paint').length){
+    html+=tblHdr('Painting',[{v:'Description'},{v:'Qty',r:1},{v:'Rate',r:1},{v:'Total',r:1}]);
+    byType('paint').forEach(s=>{const r=calcPaint(s);html+=row(s,[{v:`${esc(s.desc)||r.l}<br><span class="ptag">${r.l}</span>`},{v:`${(s.sqft||0).toLocaleString()} ${r.u}`,r:1},{v:`${fmt(r.rate)}/${r.u}`,r:1},{v:fmt(r.tot),r:1}]);});
+    html+='</tbody></table>';
+  }
+  if(byType('tile').length){
+    html+=tblHdr('Tile Installation',[{v:'Description'},{v:'Sq ft',r:1},{v:'Total',r:1}]);
+    byType('tile').forEach(s=>{const r=calcTile(s);const addons=[...(s.niches||[]).map(n=>{const t=NICHES.find(x=>x.k===n.type)||NICHES[0];return`${n.qty}× ${t.l}`;}),(s.benches||[]).map(b=>{const t=BENCHES.find(x=>x.k===b.type)||BENCHES[0];return`${b.qty}× ${t.l}`;})].filter(Boolean).join(' · ');html+=row(s,[{v:`${esc(s.desc)||r.areaL}<br><span class="ptag">${r.matL}</span><span class="ptag" style="background:#e6effc;color:#2a5ba0">${r.wpL}</span><span class="ptag" style="background:#f0ecfc;color:#5a3aa0">${r.areaL} · ${r.compL}</span>${addons?`<br><span style="font-size:9px;color:#888">${esc(addons)}</span>`:''}`},{v:`${(s.sqft||0).toLocaleString()} sq ft`,r:1},{v:fmt(r.sub),r:1}]);});
+    html+='</tbody></table>';
+  }
+  if(byType('other').length){
+    html+=tblHdr('Wallcovering & Carpentry',[{v:'Description'},{v:'Qty',r:1},{v:'Rate',r:1},{v:'Total',r:1}]);
+    byType('other').forEach(s=>{const r=calcOther(s);html+=row(s,[{v:`${esc(s.desc)||r.l}<br><span class="ptag" style="background:#f0ecfc;color:#7a3aa0">${r.l}</span>`},{v:`${(s.sqft||0).toLocaleString()} ${r.u}`,r:1},{v:`${fmt(r.rate)}/${r.u}`,r:1},{v:fmt(r.tot),r:1}]);});
+    html+='</tbody></table>';
+  }
+  if(byType('organize').length){
+    html+=tblHdr('Organizing & Closet Design',[{v:'Description'},{v:'Qty',r:1},{v:'Rate',r:1},{v:'Total',r:1}]);
+    byType('organize').forEach(s=>{const r=calcOrg(s);const fl=(s.features||[]).map(f=>{const t=CF_T.find(x=>x.k===f.type)||CF_T[0];return`${f.qty}× ${t.l}`;}).join(', ');html+=row(s,[{v:`${esc(s.desc)||r.l}<br><span class="ptag" style="background:#fff0f0;color:#a03a3a">${r.l}</span>${fl?`<br><span style="font-size:9px;color:#888">${esc(fl)}</span>`:''}`},{v:`${s.qty||0} ${r.u}`,r:1},{v:`${fmt(r.rate)}/${r.u}`,r:1},{v:fmt(r.tot),r:1}]);});
+    html+='</tbody></table>';
+  }
+  if(!services.length) html='<p style="color:#bbb;font-size:12px;padding:12px 0">No services added yet.</p>';
+
+  const wrap=$('preview-root');
+  const sc=Math.min(1,(wrap.offsetWidth-24)/680);
+  const scStyle=sc<1?`style="transform:scale(${sc});width:680px;transform-origin:top left;"`:'';
+  wrap.innerHTML=`<div class="pdf-preview" id="pdf-content" ${scStyle}>
+    <div class="pdf-hd"><div class="pdf-hd-left">
+      ${LOGO_SRC?`<img src="${LOGO_SRC}" class="pdf-logo" alt="SBI">`:''}
+      <div><div class="pdf-co">${esc(v('biz-name'))||'SBI Design & Build'}</div>
+      <div class="pdf-co-sub">${esc(v('biz-addr'))}<br>${esc(v('biz-phone'))} · ${esc(v('biz-email'))}${v('biz-lic')?'<br>License: '+esc(v('biz-lic')):''}</div></div>
+    </div>
+    <div class="pdf-qinfo"><div class="pdf-qlabel">Estimate</div><div class="pdf-qnum">#${esc(v('q-num'))}</div>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">Date: ${fmtD('q-date')}</div>
+      ${fmtD('q-exp')?`<div style="font-size:10px;color:#aaa">Expires: ${fmtD('q-exp')}</div>`:''}
+    </div></div>
+    <div class="pdf-meta">
+      <div><div class="pdf-blabel">Prepared for</div>
+        <div class="pdf-bval"><strong>${esc(v('cl-name'))}</strong><br>${esc(v('cl-addr'))}<br>${esc(v('cl-phone'))}<br>${esc(v('cl-email'))}</div></div>
+      <div><div class="pdf-blabel">Project</div>
+        <div class="pdf-proj-title">${esc(v('proj-title'))||'Project'}</div>
+        ${fmtD('proj-start')?`<div style="font-size:11px;color:#777;margin-top:3px">Start: ${fmtD('proj-start')}</div>`:''}
+        ${v('proj-dur')?`<div style="font-size:11px;color:#777">Duration: ${esc(v('proj-dur'))}</div>`:''}</div>
+    </div>
+    ${html}
+    <div class="pdf-totals-wrap"><div class="pdf-totals-inner">
+      <div class="pdf-trow"><span>Materials (marked up)</span><span>${fmt(tm)}</span></div>
+      <div class="pdf-trow"><span>Labor</span><span>${fmt(tl)}</span></div>
+      <div class="pdf-trow"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+      <div class="pdf-trow"><span>Overhead / profit (${fv('op-rate')}%)</span><span>${fmt(op)}</span></div>
+      <div class="pdf-trow grand"><span>Total</span><span>${fmt(grand)}</span></div>
+    </div></div>
+    ${v('notes')?`<div class="pdf-notes"><div class="pdf-nlabel">Notes & Terms</div><div class="pdf-ntext">${esc(v('notes'))}</div></div>`:''}
+    <div class="pdf-sig">
+      <div><div style="margin-bottom:28px"></div><div class="pdf-sigline">Client signature & date</div></div>
+      <div><div style="margin-bottom:28px"></div><div class="pdf-sigline">Contractor signature & date</div></div>
+    </div>
+    <div class="pdf-footer"><span>${esc(v('biz-name'))||'SBI Design & Build'}</span><span>Estimate #${esc(v('q-num'))} · ${fmtD('q-date')}</span></div>
+  </div>`;
+}
+
+// ── PNG Download ──────────────────────────────────────────────
+function generatePNG(){
+  const SC=2,PW=816*SC,PH=1056*SC,M=48*SC,CW=PW-M*2;
+  const cv=document.createElement('canvas');cv.width=PW;cv.height=PH;
+  const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,PW,PH);
+  const dk='#1a1a1a',md='#666',lt='#aaa';let y=M;
+  const tx=(t,x,yy,o={})=>{ctx.font=`${o.b?'bold ':o.i?'italic ':''}${(o.s||11)*SC}px ${o.sf?'Georgia,serif':'system-ui,sans-serif'}`;ctx.fillStyle=o.c||dk;ctx.textAlign=o.a||'left';ctx.fillText(String(t||''),x,yy);ctx.textAlign='left';};
+  const ln=(x1,y1,x2,y2,c='#ddd',w=1)=>{ctx.strokeStyle=c;ctx.lineWidth=w*SC;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+  let tm=0,tl=0;services.forEach(s=>{const r=svcML(s);tm+=r.m;tl+=r.l;});
+  const sub=tm+tl,op=sub*(fv('op-rate')/100),grand=sub+op;
+  const go=tx2=>{
+    tx(v('biz-name')||'SBI Design & Build',tx2,y+20*SC,{b:true,s:15,sf:true});
+    tx(v('biz-addr'),tx2,y+36*SC,{s:9,c:md});tx(`${v('biz-phone')}  ·  ${v('biz-email')}`,tx2,y+48*SC,{s:9,c:md});
+    if(v('biz-lic'))tx(`License: ${v('biz-lic')}`,tx2,y+60*SC,{s:9,c:md});
+    tx('ESTIMATE',PW-M,y+10*SC,{s:8,c:lt,a:'right'});tx(`#${v('q-num')}`,PW-M,y+24*SC,{b:true,s:13,a:'right'});
+    tx(`Date: ${fmtD('q-date')}`,PW-M,y+38*SC,{s:9,c:md,a:'right'});
+    if(fmtD('q-exp'))tx(`Expires: ${fmtD('q-exp')}`,PW-M,y+50*SC,{s:9,c:md,a:'right'});
+    y+=75*SC;ln(M,y,PW-M,y,dk,1.5);y+=14*SC;
+    tx('PREPARED FOR',M,y,{s:8,c:lt});tx('PROJECT',M+CW/2+10*SC,y,{s:8,c:lt});y+=11*SC;
+    tx(v('cl-name'),M,y,{b:true,s:11});tx(v('proj-title'),M+CW/2+10*SC,y,{b:true,s:11});y+=13*SC;
+    [v('cl-addr'),v('cl-phone'),v('cl-email')].filter(Boolean).forEach(l=>{tx(l,M,y,{s:9,c:md});y+=11*SC;});
+    let py=y-33*SC;
+    if(fmtD('proj-start')){tx(`Start: ${fmtD('proj-start')}`,M+CW/2+10*SC,py,{s:9,c:md});py+=11*SC;}
+    if(v('proj-dur'))tx(`Duration: ${v('proj-dur')}`,M+CW/2+10*SC,py,{s:9,c:md});
+    y+=12*SC;
+    const sh=lbl=>{tx(lbl.toUpperCase(),M,y,{s:8,c:lt});y+=6*SC;ln(M,y,PW-M,y,'#ccc',.5);y+=11*SC;};
+    const dr=(cols,hdr=false)=>{if(hdr){ctx.fillStyle='#f5f5f5';ctx.fillRect(M,y-12*SC,CW,17*SC);}cols.forEach(c=>{ctx.font=`${9*SC}px system-ui,sans-serif`;ctx.fillStyle=hdr?md:dk;ctx.textAlign=c.a||'left';ctx.fillText(c.t||'',c.a==='right'?c.x+c.w:c.x,y);ctx.textAlign='left';});y+=17*SC;if(!hdr)ln(M,y-4*SC,PW-M,y-4*SC,'#f0f0f0',.5);};
+    const c1=M,c2=M+CW*.55,c3=M+CW*.72,c4=M+CW*.88,w1=CW*.54,w2=CW*.16,w3=CW*.15,w4=CW*.12;
+    const std4=(svcs,title,getRow)=>{if(!svcs.length)return;sh(title);dr([{t:'DESCRIPTION',x:c1,w:w1},{t:'QTY',x:c2,w:w2,a:'right'},{t:'RATE',x:c3,w:w3,a:'right'},{t:'TOTAL',x:c4,w:w4,a:'right'}],true);svcs.forEach(s=>{const[d,q,r,t]=getRow(s);dr([{t:d,x:c1,w:w1},{t:q,x:c2,w:w2,a:'right'},{t:r,x:c3,w:w3,a:'right'},{t:t,x:c4,w:w4,a:'right'}]);});y+=6*SC;};
+    std4(services.filter(s=>s.TYPE==='staging'),'Home Staging',s=>{const r=calcStag(s);return[`${s.desc||r.l} (${r.l})`,`${s.qty||0} ${r.u}`,`${fmt(r.rate)}/${r.u}`,fmt(r.tot)];});
+    std4(services.filter(s=>s.TYPE==='paint'),'Painting',s=>{const r=calcPaint(s);return[`${s.desc||r.l} (${r.l})`,`${(s.sqft||0).toLocaleString()} ${r.u}`,`${fmt(r.rate)}/${r.u}`,fmt(r.tot)];});
+    std4(services.filter(s=>s.TYPE==='other'),'Wallcovering & Carpentry',s=>{const r=calcOther(s);return[`${s.desc||r.l} (${r.l})`,`${(s.sqft||0).toLocaleString()} ${r.u}`,`${fmt(r.rate)}/${r.u}`,fmt(r.tot)];});
+    std4(services.filter(s=>s.TYPE==='organize'),'Organizing & Closet',s=>{const r=calcOrg(s);return[`${s.desc||r.l} (${r.l})`,`${s.qty||0} ${r.u}`,`${fmt(r.rate)}/${r.u}`,fmt(r.tot)];});
+    const tSvcs=services.filter(s=>s.TYPE==='tile');
+    if(tSvcs.length){sh('Tile Installation');dr([{t:'DESCRIPTION',x:c1,w:w1},{t:'SQ FT',x:c2,w:w2,a:'right'},{t:'TOTAL',x:c4,w:w4,a:'right'}],true);tSvcs.forEach(s=>{const r=calcTile(s);const desc=`${s.desc||r.areaL} | ${r.matL} | ${r.wpL} | ${r.compL}`;ctx.font=`${9*SC}px system-ui,sans-serif`;const ws=desc.split(' ');let ln2='',lns=[];ws.forEach(w=>{const t=ln2?ln2+' '+w:w;if(ctx.measureText(t).width>w1&&ln2){lns.push(ln2);ln2=w;}else ln2=t;});if(ln2)lns.push(ln2);ctx.fillStyle=dk;lns.forEach((l,i)=>ctx.fillText(l,c1,y+i*11*SC));ctx.textAlign='right';ctx.fillText(`${(s.sqft||0).toLocaleString()} sqft`,c2+w2,y);ctx.fillText(fmt(r.sub),c4+w4,y);ctx.textAlign='left';y+=Math.max(lns.length,1)*11*SC+9*SC;ln(M,y-3*SC,PW-M,y-3*SC,'#f0f0f0',.5);});y+=6*SC;}
+    if(!services.length){tx('No services added.',M,y,{c:lt,s:10});y+=18*SC;}
+    const totX=M+CW*.58;
+    [['Materials (marked up)',fmt(tm)],['Labor',fmt(tl)],['Subtotal',fmt(sub)],[`Overhead / profit (${fv('op-rate')}%)`,fmt(op)]].forEach(([lb,vl])=>{ctx.font=`${9*SC}px system-ui,sans-serif`;ctx.fillStyle=md;ctx.fillText(lb,totX,y);ctx.textAlign='right';ctx.fillText(vl,PW-M,y);ctx.textAlign='left';y+=13*SC;ln(totX,y-2*SC,PW-M,y-2*SC,'#eee',.5);});
+    y+=4*SC;ln(totX,y,PW-M,y,dk,1.2);y+=13*SC;
+    tx('Total',totX,y,{b:true,s:12});tx(fmt(grand),PW-M,y,{b:true,s:12,a:'right'});ctx.textAlign='left';y+=16*SC;
+    if(v('notes')){y+=4*SC;ln(M,y,PW-M,y,'#ddd',.5);y+=12*SC;tx('NOTES & TERMS',M,y,{s:8,c:lt});y+=11*SC;v('notes').split('\n').forEach(nl=>{ctx.font=`${9*SC}px system-ui,sans-serif`;const ws=nl.split(' ');let ln2='',lns=[];ws.forEach(w=>{const t=ln2?ln2+' '+w:w;if(ctx.measureText(t).width>CW&&ln2){lns.push(ln2);ln2=w;}else ln2=t;});lns.push(ln2||' ');lns.forEach(l=>{tx(l,M,y,{s:9,c:md});y+=11*SC;});});}
+    y+=16*SC;const sw=(CW-16*SC)/2;ln(M,y,M+sw,y,lt,.5);ln(M+sw+16*SC,y,PW-M,y,lt,.5);y+=9*SC;
+    tx('Client signature & date',M,y,{s:8,c:lt});tx('Contractor signature & date',M+sw+16*SC,y,{s:8,c:lt});
+    ln(M,PH-26*SC,PW-M,PH-26*SC,'#eee',.5);
+    tx(v('biz-name')||'SBI Design & Build',M,PH-13*SC,{s:8,c:lt});tx(`Estimate #${v('q-num')} · ${fmtD('q-date')}`,PW-M,PH-13*SC,{s:8,c:lt,a:'right'});ctx.textAlign='left';
+    cv.toBlob(blob=>{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`SBI-estimate-${v('q-num')||'001'}.png`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);},'image/png');
+  };
+  if(LOGO_SRC){const li=new Image();li.onload=()=>{const lh=60*SC,lw=lh*(li.naturalWidth/li.naturalHeight);ctx.drawImage(li,M,y,lw,lh);go(M+lw+14*SC);};li.src=LOGO_SRC;}else go(M);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+const today=new Date().toISOString().slice(0,10);
+$('q-date').value=today;
+$('q-exp').value=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+initButtons();
+</script>
+</body>
+</html>
